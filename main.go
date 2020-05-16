@@ -24,8 +24,6 @@ import (
 
 func main() {
 
-	//commands.PermissionKey = append(commands.PermissionKey, "testkey1")
-	//commands.PermissionKey = append(commands.PermissionKey, "testkey2")
 
 	// 开启s12客户端，连接s10
 	go client.WSClient()
@@ -33,12 +31,14 @@ func main() {
 	// 开启s12服务端，监听设备的连接,处理指令
 	go server.Manager.Start()
 	go server.Manager.HandleCommand()
-	go server.Manager.Report()
+	go server.Manager.ReportCurrentState()
 
 	http.HandleFunc("/ws", server.WSServer)
 	if err := http.ListenAndServe(":9911", nil); err != nil {
 		fmt.Println("http server error: ", err.Error())
 	}
+
+
 
 	// 在主线程中阻塞，防止程序退出
 	c := make(chan os.Signal)

@@ -17,9 +17,11 @@ var Manager = ClientManager{
 	Clients:    make(map[*Client]bool),
 }
 
-// client连接的url格式：ws://ip:9911/?device_type=papp&key=faghjag
+// client连接的url格式：ws://192.168.1.186:9911/?devicetype=papp&key=faghjag
 // 处理ws连接
 func WSServer(res http.ResponseWriter, req *http.Request) {
+
+	fmt.Println("execute here")
 
 	conn, err := (&websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}).Upgrade(res, req, nil)
 	if err != nil {
@@ -88,20 +90,24 @@ func WSServer(res http.ResponseWriter, req *http.Request) {
 
 	// 实例化这个设备
 	client := &Client{
-		DeviceType: reqType,
-		Key:        key,
-		Mac:        mac,
-		Socket:     conn,
-		IP:         ip,
-		Read:       make(chan []byte),
-		Write:      make(chan []byte),
+		DeviceType:    reqType,
+		Key:           key,
+		Mac:           mac,
+		Socket:        conn,
+		IP:            ip,
+		Read:          make(chan []byte),
+		Write:         make(chan []byte),
+		CloseChan:     make(chan struct{}, 1),
+		BroadcastRecv: false,
 	}
+
+	//util.SmartPrint(client)
 
 	Manager.Register <- client
-
-	for c, _ := range Manager.Clients {
-		fmt.Println(c)
-	}
+	//
+	//for c, _ := range Manager.Clients {
+	//	fmt.Println(c)
+	//}
 
 	// 开启协程 对该设备进行收发数据
 	go client.read()

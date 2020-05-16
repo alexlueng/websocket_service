@@ -4,10 +4,10 @@ package commands
 var S12Key string
 var PermissionKey []string
 
-var InCmdChan = make(chan Cmd, 100)  // 放置指令的管道
-var OutCmdChan = make(chan Cmd, 100) // 读取指令的管道
 
 
+var InCmdChan = make(chan Cmd, 100) // 放置指令的管道
+var OutCmdChan = make(chan Cmd, 1)  // 读取指令的管道
 
 // 首先确定数据结构
 // websocket 发送的指令数据格式
@@ -26,18 +26,18 @@ type Cmd struct {
 }
 
 type ReportData struct {
-	Type string `json:"type"`
+	Type string `json:"type"` // online offline
 	Data string `json:"data"`
 }
 
-// 设备上线，下线的数据格式
+// report的数据格式
 type ConnectStatus struct {
-	ID        int64  `json:"id"` // 设备ID
-	Key       string `json:"key"`
-	IP        string `json:"ip"`
-	Duration  int64  `json:"duration"`   // 连接时长
-	LastAlive int64  `json:"last_alive"` //最后活跃时间
-	Status    string `json:"status"`     // up down
+	State      string                 `json:"state"`
+	Clients    map[string]interface{} `json:"clients"`
+	Routers    map[string][]string    `json:"routers"`
+	WhiteList  []string               `json:"white_list"`
+	Active     int64                  `json:"active"`
+	ServerInfo interface{}            `json:"server_info"`
 }
 
 // 连接情况
@@ -54,4 +54,3 @@ type ServerStatus struct {
 	CpuInfo  int64 `json:"cpu_info"`
 	DiskInfo int64 `json:"disk_info"`
 }
-

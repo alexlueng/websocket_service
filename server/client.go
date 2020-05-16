@@ -4,17 +4,18 @@ import "github.com/gorilla/websocket"
 
 // 一个设备连接进来就实例化一个client
 type Client struct {
-	DeviceId   string
-	DeviceType string // 设备类型 1:winapp,2:deviceapp，3:phoneapp
-	Key        string // 设备key 作为设备的唯一标识
-	Mac        string
-	IP         string
-	Socket     *websocket.Conn
-	Read       chan []byte
-	Write      chan []byte
-	Tm         int64 //最后一次通话的时间 毫秒
+	DeviceId      string          `json:"-"`
+	DeviceType    string          `json:"device_type"` // 设备类型 1:winapp,2:deviceapp，3:phoneapp, 4:s2
+	Key           string          `json:"key"`         // 设备key 作为设备的唯一标识
+	Mac           string          `json:"mac"`
+	IP            string          `json:"ip"`
+	Socket        *websocket.Conn `json:"socket"`
+	Read          chan []byte     `json:"-"`
+	Write         chan []byte     `json:"-"`
+	Tm            int64           `json:"tm"` //最后一次通话的时间 毫秒
+	BroadcastRecv bool            `json:"-"`  //是否在接受广播
+	CloseChan     chan struct{}   `json:"-"`
 }
-
 
 // 从连接中读取数据
 func (c *Client) read() {
@@ -48,7 +49,7 @@ func (c *Client) write() {
 				return
 			}
 
-			c.Socket.WriteMessage(websocket.TextMessage, message)
+			c.Socket.WriteMessage(websocket.BinaryMessage, message)
 		}
 	}
 }
