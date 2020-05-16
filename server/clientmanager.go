@@ -479,10 +479,14 @@ func (manager *ClientManager) send(message []byte, ignore *Client) {
 // S12收到broadcast指令后，首先更新BroadcastTable
 // 广播结束的标志是什么
 func (manager *ClientManager) HandleBroadcast(fromKey, toKey string) {
+
+	toKeyArray := strings.Split(toKey, ",")
+
 	if conn, ok := ConnectionMap[fromKey]; ok {
 		// 说明已经在发送数据了，现转为广播
+		// 广播结束的时候要把标志改为false
 		conn.IsBroadcasting = true
-		toKeyArray := strings.Split(toKey, ",")
+
 		for _, key := range toKeyArray {
 			if client, ok := manager.CheckClientExist(key); ok {
 				client.BroadcastRecv = true
@@ -499,11 +503,25 @@ func (manager *ClientManager) HandleBroadcast(fromKey, toKey string) {
 			IsBroadcasting: true,
 			WriteClients: []Client{},
 		}
-		connection.ReadClient = Client{}
-		connection.BroadcastClients = []Client{}
+
+		if conn, ok := manager.CheckClientExist(fromKey); ok {
+			connection.ReadClient = *conn
+		} else {
+			go manager.WaitForFromKey(&connection, fromKey)
+		}
+
+		for _, toKey := range toKeyArray {
+			if conn, ok := manager.CheckClientExist(toKey); ok {
+				connection.BroadcastClients = append(connection.BroadcastClients, *conn)
+			} else {
+				go manager.WaitForFromKey(&connection, toKey)
+			}
+		}
+
 		ConnectionMap[fromKey] = &connection
 	}
 
+	BroadcastTable[fromKey] = toKeyArray
 }
 
 func (manager *ClientManager) ReportCurrentState() {

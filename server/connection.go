@@ -85,6 +85,10 @@ func (c *Connection) DeleteWriteClient(toKey string) {
 	}
 }
 
+func (c *Connection) StopBroadcasting() {
+	c.IsBroadcasting = false
+}
+
 // 打印当前连接实例的信息
 func (c *Connection) ReportConnectStatus() {
 	ticker := time.NewTicker(10 * time.Second)
